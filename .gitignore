@@ -1,0 +1,12 @@
+# Security: Never commit sensitive credentials
+.env
+credentials.json
+*.log
+
+# System files
+.DS_Store
+Thumbs.db
+
+# n8n specific
+node_modules/
+dist/
