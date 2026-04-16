@@ -1,0 +1,225 @@
+{
+  "name": "AI News in Discord DM Delivery",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -544,
+        80
+      ],
+      "id": "a696d551-95db-4710-8bd9-e0f014b7d869",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "url": "https://techcrunch.com/tag/artificial-intelligence/feed/",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        -224,
+        80
+      ],
+      "id": "6fa1ec1e-35ff-46c3-a32c-89b0b1bdf04f",
+      "name": "RSS Read1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Summarize this AI news in 1-2 lines.\nBe concise and clear.\nNo numbering.\n\nNews:\n{{$json[\"title\"]}} - {{$json[\"contentSnippet\"]}}",
+        "needsFallback": true,
+        "options": {
+          "systemMessage": "=You are a sharp AI news analyst.\n\nYour job:\nSummarize each news item in 1-2 lines.\n\nRules:\n- Be clear and concise\n- No fluff\n- Focus on impact\n\nFormat EXACTLY like this:\n\n1. Title\n→ Summary\n→ Why it matters\n\nNews:\n{{$json[\"title\"]}} - {{$json[\"contentSnippet\"]}}",
+          "enableStreaming": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        352,
+        80
+      ],
+      "id": "c286d204-2aa2-43cd-acef-1cdf379b91d7",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        432,
+        304
+      ],
+      "id": "3ce1faf1-2b98-43eb-b3d2-7727add50865",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "h3S0k9NLNpe4hxGh",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "let message = \"🔥 AI NEWS TODAY\\n\\n\";\n\nitems.forEach((item, index) => {\n  const content = item.json.output || \"No data\";\n\n  message += `${index + 1}. ${content}\\n\\n`;\n});\n\nreturn [{ json: { message } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        704,
+        80
+      ],
+      "id": "36a2febc-f4ac-4032-87b7-1c9d38f76d72",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://discord.com/api/webhooks/1493868905100214372/Wj0RhCB4kVRF-Gi50MjEPATgHrtHquPNb_CgJE81VGgzpHDXJm1BG0SPXvZ-t4-jWMDR",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"content\": {{$json.message ? JSON.stringify($json.message) : \"\\\"No data\\\"\"}}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        928,
+        80
+      ],
+      "id": "2dca011f-3216-413e-b7c6-97497e3fc4fe",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "const seen = new Set();\n\nconst unique = items.filter(item => {\n  const title = item.json.title;\n  if (seen.has(title)) return false;\n  seen.add(title);\n  return true;\n});\n\nreturn unique.slice(0, 5);"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        128,
+        80
+      ],
+      "id": "555b61e6-a183-49b3-a9a7-55bd5af7774b",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3-flash-preview",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        208,
+        288
+      ],
+      "id": "92c0d7d0-be84-4bfe-9e9a-33cdae12a1cc",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "h3S0k9NLNpe4hxGh",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "RSS Read1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Read1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "839795a3-a17a-4f4f-84e1-50452d6ec1be",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3d94f51fcbb0e5522f7256e07d97964d5de2db71d67d2c262b0ca21dd0f2135e"
+  },
+  "id": "HBjcKlOc8qmHebAq",
+  "tags": []
+}
