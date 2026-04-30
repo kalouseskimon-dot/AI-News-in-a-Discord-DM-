@@ -21,4 +21,4 @@ This pipeline leverages a multi-stage execution model:
 4. Replace the `REDACTED` URL in the **HTTP Request** node with your actual Discord Webhook URL.
 
 ## ⚖️ License
-Distributed under the MIT License. See `LICENSE` for more information.
+Distributed under the [MIT License]. 
